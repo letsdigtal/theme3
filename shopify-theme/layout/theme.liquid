@@ -1,0 +1,254 @@
+<!doctype html>
+<html class="no-js" lang="{{ request.locale.iso_code }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    {{ page_title }}
+    {%- if current_tags %} &ndash; tagged "{{ current_tags | join: ', ' }}"{% endif -%}
+    {%- if current_page != 1 %} &ndash; Page {{ current_page }}{% endif -%}
+    {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}
+  </title>
+  {%- if page_description -%}
+    <meta name="description" content="{{ page_description | escape }}">
+  {%- endif -%}
+  <link rel="canonical" href="{{ canonical_url }}">
+  {%- if settings.favicon -%}
+    <link rel="icon" href="{{ settings.favicon | image_url: width: 64 }}" type="image/png">
+  {%- endif -%}
+
+  {{ content_for_header }}
+
+  {{ settings.heading_font | font_face: font_display: 'swap' }}
+  {{ settings.heading_font | font_modify: 'style', 'italic' | font_face: font_display: 'swap' }}
+  {{ settings.heading_font | font_modify: 'weight', 600 | font_face: font_display: 'swap' }}
+  {{ settings.body_font | font_face: font_display: 'swap' }}
+  {{ settings.body_font | font_modify: 'weight', 700 | font_face: font_display: 'swap' }}
+
+  {% style %}
+    :root {
+      --color-ice: {{ settings.color_bg }};
+      --color-cloud: {{ settings.color_surface }};
+      --color-ink: {{ settings.color_text }};
+      --color-aqua: {{ settings.color_accent }};
+      --color-aquadeep: {{ settings.color_accent_dark }};
+      --color-deep: {{ settings.color_deep }};
+      --color-peach: {{ settings.color_warm }};
+      --color-foam: {{ settings.color_line }};
+      --font-display: {{ settings.heading_font.family }}, {{ settings.heading_font.fallback_families }};
+      --font-body: {{ settings.body_font.family }}, {{ settings.body_font.fallback_families }};
+      --page-width: {{ settings.page_width }}px;
+    }
+  {% endstyle %}
+  {{ 'base.css' | asset_url | stylesheet_tag }}
+
+  <script>document.documentElement.className = document.documentElement.className.replace('no-js', 'js');</script>
+</head>
+
+<body class="template-{{ template.name | handle }} noise">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  {%- if settings.announcement_show and settings.announcement_text != blank -%}
+    <div class="announce" role="status">
+      <div class="mq-track" style="--mq-duration: 30s;">
+        {%- for i in (1..2) -%}
+          <span class="mq-set">
+            {%- for n in (1..3) -%}
+              {{ settings.announcement_text }}<span class="mq-sep" aria-hidden="true">✦</span>
+            {%- endfor -%}
+          </span>
+        {%- endfor -%}
+      </div>
+    </div>
+  {%- endif -%}
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <button class="icon-btn menu-btn" data-menu-toggle aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <path d="M3 6h18M3 12h18M3 18h12"/>
+        </svg>
+      </button>
+
+      <a class="brand" href="{{ routes.root_url }}">
+        {%- if settings.logo -%}
+          <img src="{{ settings.logo | image_url: width: 280 }}" alt="{{ shop.name }}" height="34">
+        {%- else -%}
+          <span class="brand-word">{{ shop.name }}</span>
+          <span class="brand-dot" aria-hidden="true">✳</span>
+        {%- endif -%}
+      </a>
+
+      <nav class="main-nav" aria-label="Primary">
+        {%- for link in linklists.main-menu.links -%}
+          <a class="nav-link link-line" href="{{ link.url }}">{{ link.title }}</a>
+        {%- endfor -%}
+      </nav>
+
+      <div class="header-actions">
+        {%- if shop.customer_accounts_enabled -%}
+          <a class="icon-btn" href="{{ routes.account_url }}" aria-label="Account">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+              <circle cx="12" cy="8" r="3.6"/>
+              <path d="M4.5 20c1.4-3.4 4.2-5 7.5-5s6.1 1.6 7.5 5"/>
+            </svg>
+          </a>
+        {%- endif -%}
+        <button class="icon-btn cart-btn" data-cart-toggle aria-label="Open bag">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 7h12l1.5 13.5a1 1 0 0 1-1 1.1H5.5a1 1 0 0 1-1-1.1L6 7Z"/>
+            <path d="M9 10V6a3 3 0 0 1 6 0v4"/>
+          </svg>
+          <span class="cart-badge" data-cart-count>{{ cart.item_count }}</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="overlay" data-overlay></div>
+
+  <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
+    <div class="mobile-menu-head">
+      <span class="brand-word">{{ shop.name }}</span>
+      <button class="icon-btn" data-menu-toggle aria-label="Close menu">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <path d="M5 5l14 14M19 5L5 19"/>
+        </svg>
+      </button>
+    </div>
+    <div class="mobile-menu-links">
+      {%- for link in linklists.main-menu.links -%}
+        <a href="{{ link.url }}">{{ link.title }}</a>
+      {%- endfor -%}
+      {%- for link in linklists.footer.links limit: 4 -%}
+        <a class="mobile-menu-sub" href="{{ link.url }}">{{ link.title }}</a>
+      {%- endfor -%}
+    </div>
+    <div class="mobile-menu-foot">
+      {%- if settings.social_instagram -%}<a href="{{ settings.social_instagram }}" target="_blank" rel="noopener">Instagram</a>{%- endif -%}
+      {%- if settings.social_tiktok -%}<a href="{{ settings.social_tiktok }}" target="_blank" rel="noopener">TikTok</a>{%- endif -%}
+    </div>
+  </nav>
+
+  <aside class="drawer" id="cart-drawer" role="dialog" aria-modal="true" aria-label="Shopping bag">
+    <div class="drawer-head">
+      <h2 class="drawer-title">Your bag <span data-cart-count-label>({{ cart.item_count }})</span></h2>
+      <button class="icon-btn" data-cart-toggle aria-label="Close bag">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <path d="M5 5l14 14M19 5L5 19"/>
+        </svg>
+      </button>
+    </div>
+    <div class="meter" data-meter>
+      <p class="meter-label" data-meter-label></p>
+      <div class="meter-track"><div class="meter-fill" data-meter-fill></div></div>
+    </div>
+    <div class="drawer-body" data-cart-lines>
+      <div class="cart-empty" data-cart-empty>
+        <p class="cart-empty-note">Your bag is empty — your skin deserves better.</p>
+        <a class="btn btn-dark" href="{{ routes.all_products_collection_url }}" data-cart-toggle>Start shopping</a>
+      </div>
+    </div>
+    <div class="drawer-foot" data-cart-foot>
+      <p class="drawer-sub">Subtotal <strong data-cart-subtotal>{{ cart.total_price | money }}</strong></p>
+      <p class="drawer-note">Shipping and taxes calculated at checkout.</p>
+      <a class="btn btn-accent btn-block" href="{{ routes.cart_url }}">View bag</a>
+      <form action="{{ routes.cart_url }}" method="post" class="drawer-checkout">
+        <button class="btn btn-dark btn-block" type="submit" name="checkout">Checkout</button>
+      </form>
+    </div>
+  </aside>
+
+  <div class="toast-wrap" data-toast-wrap aria-live="polite"></div>
+
+  <main id="main">
+    {{ content_for_layout }}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p class="footer-word" aria-hidden="true">{{ shop.name }}</p>
+      <div class="footer-grid">
+        <div class="footer-col footer-col--brand">
+          <a class="brand brand--light" href="{{ routes.root_url }}">
+            <span class="brand-word">{{ shop.name }}</span><span class="brand-dot" aria-hidden="true">✳</span>
+          </a>
+          <p class="footer-blurb">{{ settings.footer_about }}</p>
+          <div class="footer-social">
+            {%- if settings.social_instagram -%}
+              <a href="{{ settings.social_instagram }}" target="_blank" rel="noopener" aria-label="Instagram">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                  <rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/>
+                </svg>
+              </a>
+            {%- endif -%}
+            {%- if settings.social_tiktok -%}
+              <a href="{{ settings.social_tiktok }}" target="_blank" rel="noopener" aria-label="TikTok">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+                  <path d="M14 4v10.5a3.75 3.75 0 1 1-3.5-3.74"/>
+                  <path d="M14 4c.4 2.8 2.2 4.6 5 5"/>
+                </svg>
+              </a>
+            {%- endif -%}
+          </div>
+        </div>
+        <div class="footer-col">
+          <h3 class="footer-title">Shop</h3>
+          {%- assign shop_menu = linklists.footer-shop -%}
+          {%- unless shop_menu.links.size > 0 -%}{%- assign shop_menu = linklists.main-menu -%}{%- endunless -%}
+          {%- for link in shop_menu.links -%}
+            <a href="{{ link.url }}">{{ link.title }}</a>
+          {%- endfor -%}
+        </div>
+        <div class="footer-col">
+          <h3 class="footer-title">Support</h3>
+          {%- assign help_menu = linklists.footer-support -%}
+          {%- if help_menu.links.size > 0 -%}
+            {%- for link in help_menu.links -%}<a href="{{ link.url }}">{{ link.title }}</a>{%- endfor -%}
+          {%- else -%}
+            <a href="{{ routes.root_url }}pages/faq">FAQ</a>
+            <a href="{{ routes.root_url }}pages/contact">Contact</a>
+            <a href="{{ shop.url }}/policies/shipping-policy">Shipping</a>
+            <a href="{{ shop.url }}/policies/refund-policy">Returns</a>
+            <a href="{{ shop.url }}/policies/privacy-policy">Privacy</a>
+          {%- endif -%}
+        </div>
+        <div class="footer-col footer-col--news">
+          <h3 class="footer-title">Skin school, monthly</h3>
+          <p class="footer-news-note">One useful email a month. No spam, ever.</p>
+          {%- form 'customer', id: 'footer-newsletter', class: 'news-form' -%}
+            <input type="hidden" name="contact[tags]" value="newsletter">
+            <label class="visually-hidden" for="footer-news-email">Email</label>
+            <input id="footer-news-email" class="news-input" type="email" name="contact[email]" placeholder="Your email" required autocomplete="email">
+            <button class="news-btn" type="submit" aria-label="Subscribe">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 12h15M13 6l6 6-6 6"/>
+              </svg>
+            </button>
+            {%- if form.posted_successfully? -%}
+              <p class="news-ok">You're on the list ✓</p>
+            {%- elsif form.errors -%}
+              <p class="news-err">Please enter a valid email.</p>
+            {%- endif -%}
+          {%- endform -%}
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© {{ 'now' | date: '%Y' }} {{ shop.name }}. All rights reserved.</p>
+        <p class="footer-made">Dermatologist formulated · Fragrance free · Cruelty free</p>
+        <p class="footer-powered">Powered by Shopify</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    window.CALMA = {
+      moneyFormat: {{ shop.money_format | json }},
+      freeShipThreshold: {{ settings.free_shipping_threshold | default: 50 | times: 100 }},
+      routes: { cart: {{ routes.cart_url | json }}, cartAdd: {{ routes.cart_add_url | json }}, cartChange: {{ routes.cart_change_url | json }} }
+    };
+    window.__cart = {{ cart | json }};
+  </script>
+  <script src="{{ 'theme.js' | asset_url }}" defer></script>
+</body>
+</html>

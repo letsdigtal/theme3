@@ -1,0 +1,60 @@
+[
+  {
+    "name": "theme_info",
+    "theme_name": "Calma Skin",
+    "theme_version": "1.0.0",
+    "theme_author": "Calma Studio",
+    "theme_documentation_url": "https://help.shopify.com/manual/online-store/themes",
+    "theme_support_url": ""
+  },
+  {
+    "name": "Colors",
+    "settings": [
+      { "type": "header", "content": "Palette" },
+      { "type": "color", "id": "color_bg", "label": "Background", "default": "#F1F7F9" },
+      { "type": "color", "id": "color_surface", "label": "Surfaces and cards", "default": "#FBFDFE" },
+      { "type": "color", "id": "color_text", "label": "Text", "default": "#14323E" },
+      { "type": "color", "id": "color_accent", "label": "Accent", "default": "#17809C" },
+      { "type": "color", "id": "color_accent_dark", "label": "Accent deep", "default": "#0F5F77" },
+      { "type": "color", "id": "color_deep", "label": "Dark sections", "default": "#0C2530" },
+      { "type": "color", "id": "color_warm", "label": "Warm accent", "default": "#EDA35F" },
+      { "type": "color", "id": "color_line", "label": "Lines and borders", "default": "#C9DFE7" }
+    ]
+  },
+  {
+    "name": "Typography",
+    "settings": [
+      { "type": "font_picker", "id": "heading_font", "label": "Display font", "default": "fraunces_n4", "info": "Fraunces is recommended to match the design." },
+      { "type": "font_picker", "id": "body_font", "label": "Body font", "default": "karla_n4", "info": "Karla is recommended to match the design." }
+    ]
+  },
+  {
+    "name": "Layout",
+    "settings": [
+      { "type": "range", "id": "page_width", "min": 1100, "max": 1560, "step": 20, "unit": "px", "label": "Page width", "default": 1240 }
+    ]
+  },
+  {
+    "name": "Announcement bar",
+    "settings": [
+      { "type": "checkbox", "id": "announcement_show", "label": "Show announcement bar", "default": true },
+      { "type": "text", "id": "announcement_text", "label": "Announcement text", "default": "Free shipping over $50 · 60-day happy-skin guarantee · Dermatologist formulated" }
+    ]
+  },
+  {
+    "name": "Cart",
+    "settings": [
+      { "type": "number", "id": "free_shipping_threshold", "label": "Free shipping threshold ($)", "default": 50, "info": "The cart drawer shows a progress meter toward this amount." }
+    ]
+  },
+  {
+    "name": "Branding",
+    "settings": [
+      { "type": "image_picker", "id": "logo", "label": "Logo image", "info": "Leave empty to use your store name as a wordmark." },
+      { "type": "image_picker", "id": "favicon", "label": "Favicon" },
+      { "type": "textarea", "id": "footer_about", "label": "Footer blurb", "default": "Skincare that works with your skin, not against it. Fragrance-free, barrier-first formulas for dry, itchy and eczema-prone skin." },
+      { "type": "url", "id": "social_instagram", "label": "Instagram URL" },
+      { "type": "url", "id": "social_tiktok", "label": "TikTok URL" }
+    ]
+  }
+]
