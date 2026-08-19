@@ -1,0 +1,398 @@
+{%- comment -%}
+  CALMA main section — renders collection, product, cart, page, blog, article,
+  search, list-collections and 404 templates from one file.
+{%- endcomment -%}
+
+{%- case template.name -%}
+
+{%- when 'collection' -%}
+  <section class="shop-page">
+    <div class="page-head">
+      <div class="container">
+        <p class="eyebrow" data-reveal>{{ collection.products_count }} formulas</p>
+        <h1 class="page-title" data-reveal>{{ collection.title }}</h1>
+        {%- if collection.description != blank -%}
+          <p class="page-sub" data-reveal>{{ collection.description }}</p>
+        {%- endif -%}
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="container toolbar-inner">
+        {%- if collection.all_tags.size > 0 -%}
+          <div class="tag-row">
+            <a class="tag-pill {% unless current_tags %}tag-pill--on{% endunless %}" href="{{ collection.url }}">All</a>
+            {%- for tag in collection.all_tags -%}
+              <a class="tag-pill {% if current_tags contains tag %}tag-pill--on{% endif %}" href="{{ collection.url }}/{{ tag | handle }}">{{ tag }}</a>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+        <form class="sort-form" action="{{ collection.url }}" method="get">
+          {%- if current_tags -%}<input type="hidden" name="constraint" value="{{ current_tags | join: '+' }}">{%- endif -%}
+          <label class="visually-hidden" for="sort-by">Sort by</label>
+          <select id="sort-by" name="sort_by" onchange="this.form.submit()">
+            {%- for option in collection.sort_options -%}
+              <option value="{{ option.value }}" {% if option.value == collection.sort_by %}selected{% endif %}>{{ option.name }}</option>
+            {%- endfor -%}
+          </select>
+        </form>
+      </div>
+    </div>
+
+    <div class="container shop-grid-wrap">
+      {%- paginate collection.products by 12 -%}
+        {%- if collection.products.size > 0 -%}
+          <div class="product-grid product-grid--3">
+            {%- for product in collection.products -%}
+              {%- render 'product-card', product: product -%}
+            {%- endfor -%}
+          </div>
+          {%- if paginate.pages > 1 -%}
+            <nav class="pagination" aria-label="Pagination">{{ paginate | default_pagination }}</nav>
+          {%- endif -%}
+        {%- else -%}
+          <div class="empty-state">
+            <h2>Nothing here yet</h2>
+            <p>This collection is waiting for its first formulas.</p>
+            <a class="btn btn-dark" href="{{ routes.all_products_collection_url }}">Browse everything</a>
+          </div>
+        {%- endif -%}
+      {%- endpaginate -%}
+    </div>
+  </section>
+
+{%- when 'product' -%}
+  <section class="pdp">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ routes.root_url }}">Home</a> <span>/</span>
+        <a href="{{ routes.all_products_collection_url }}">Shop</a> <span>/</span>
+        <span aria-current="page">{{ product.title }}</span>
+      </nav>
+
+      <div class="pdp-grid">
+        <div class="pdp-gallery" data-reveal>
+          <div class="pdp-main kb-hover">
+            {%- if product.featured_image -%}
+              <img
+                id="pdp-main-img"
+                src="{{ product.featured_image | image_url: width: 1200 }}"
+                alt="{{ product.featured_image.alt | default: product.title | escape }}"
+                width="1200" height="1500"
+              >
+            {%- else -%}
+              <span class="pcard-placeholder pcard-placeholder--big">{{ product.title | slice: 0, 1 }}</span>
+            {%- endif -%}
+            {%- if product.compare_at_price > product.price -%}
+              <span class="pcard-badge pcard-badge--sale">
+                Save {{ product.compare_at_price | minus: product.price | times: 100.0 | divided_by: product.compare_at_price | round }}%
+              </span>
+            {%- elsif product.tags contains 'bestseller' -%}
+              <span class="pcard-badge">Bestseller</span>
+            {%- endif -%}
+          </div>
+          {%- if product.images.size > 1 -%}
+            <div class="pdp-thumbs">
+              {%- for image in product.images limit: 4 -%}
+                <button class="thumb {% if forloop.first %}thumb--on{% endif %}" data-thumb data-full="{{ image | image_url: width: 1200 }}" aria-label="View image {{ forloop.index }}">
+                  <img src="{{ image | image_url: width: 200 }}" alt="" loading="lazy" width="200" height="250">
+                </button>
+              {%- endfor -%}
+            </div>
+          {%- endif -%}
+        </div>
+
+        <div class="pdp-info">
+          <p class="pdp-vendor" data-reveal>{{ product.vendor }}</p>
+          <h1 class="pdp-title" data-reveal>{{ product.title }}</h1>
+          <p class="pdp-tagline" data-reveal>{{ product.description | strip_html | truncate: 160 }}</p>
+
+          <div class="price-row" data-reveal>
+            <strong class="pdp-price" data-price-main>{{ product.selected_or_first_available_variant.price | money }}</strong>
+            <s class="pdp-compare" data-compare-main {% unless product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}hidden{% endunless %}>
+              {{ product.selected_or_first_available_variant.compare_at_price | money }}
+            </s>
+            <span class="pdp-unit">{{ product.selected_or_first_available_variant.unit_price | money }} / {{ product.selected_or_first_available_variant.unit_price_measurement.reference_value }}{{ product.selected_or_first_available_variant.unit_price_measurement.reference_unit }}</span>
+          </div>
+
+          {%- form 'product', product, class: 'pdp-form', data-cart-add: 'true', data-reveal: '' -%}
+            {%- unless product.has_only_default_variant -%}
+              <label class="variant-label" for="variant-select">Size</label>
+              <select id="variant-select" name="id" class="variant-select" data-variant-select>
+                {%- for variant in product.variants -%}
+                  <option
+                    value="{{ variant.id }}"
+                    {% unless variant.available %}disabled{% endunless %}
+                    {% if variant == product.selected_or_first_available_variant %}selected{% endif %}
+                    data-price="{{ variant.price | money }}"
+                    data-compare="{{ variant.compare_at_price | money }}"
+                  >
+                    {{ variant.title }}{% unless variant.available %} — sold out{% endunless %}
+                  </option>
+                {%- endfor -%}
+              </select>
+            {%- else -%}
+              <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+            {%- endunless -%}
+
+            <div class="pdp-buy">
+              <div class="qty">
+                <button type="button" class="qty-btn" data-step="-1" aria-label="Decrease quantity">−</button>
+                <label class="visually-hidden" for="pdp-qty">Quantity</label>
+                <input id="pdp-qty" type="number" name="quantity" value="1" min="1" max="9" inputmode="numeric">
+                <button type="button" class="qty-btn" data-step="1" aria-label="Increase quantity">+</button>
+              </div>
+              {%- if product.available -%}
+                <button class="btn btn-dark btn-block" type="submit" data-add-button>
+                  Add to bag — <span data-add-price>{{ product.selected_or_first_available_variant.price | money }}</span>
+                </button>
+              {%- else -%}
+                <button class="btn btn-block" type="button" disabled>Sold out</button>
+              {%- endif -%}
+            </div>
+          {%- endform -%}
+
+          <ul class="pdp-promises" data-reveal>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v8H3zM14 10h4l3 3v2h-7z"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>
+              Free shipping over {{ settings.free_shipping_threshold | default: 50 | money_without_trailing_zeros }}
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.6"/><path d="M4 4v4h4"/></svg>
+              60-day happy-skin guarantee
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.6-3 8.4-7 10-4-1.6-7-5.4-7-10V6z"/><path d="M9 12l2 2 4-4.5"/></svg>
+              Dermatologist formulated · fragrance free
+            </li>
+          </ul>
+
+          <div class="pdp-accordions" data-reveal>
+            <details class="accordion" open>
+              <summary>The formula<span class="acc-icon" aria-hidden="true"></span></summary>
+              <div class="acc-body rte">{{ product.description }}</div>
+            </details>
+            <details class="accordion">
+              <summary>Ingredients<span class="acc-icon" aria-hidden="true"></span></summary>
+              <div class="acc-body rte">
+                {%- if product.metafields.calma.ingredients != blank -%}
+                  {{ product.metafields.calma.ingredients | newline_to_br }}
+                {%- else -%}
+                  <p>Add ingredients to this product with the <code>calma.ingredients</code> metafield (text, multi-line) and they'll appear here.</p>
+                {%- endif -%}
+              </div>
+            </details>
+            <details class="accordion">
+              <summary>How to use<span class="acc-icon" aria-hidden="true"></span></summary>
+              <div class="acc-body rte">
+                {%- if product.metafields.calma.how_to_use != blank -%}
+                  {{ product.metafields.calma.how_to_use | newline_to_br }}
+                {%- else -%}
+                  <p>Use morning and night on damp skin. Follow with the Barrier Reset Serum and Calm Cloud Lotion to seal in hydration.</p>
+                {%- endif -%}
+              </div>
+            </details>
+            <details class="accordion">
+              <summary>Shipping &amp; returns<span class="acc-icon" aria-hidden="true"></span></summary>
+              <div class="acc-body rte">
+                <p>Orders ship within 1–2 business days. Free standard shipping over {{ settings.free_shipping_threshold | default: 50 | money_without_trailing_zeros }}. Not the right fit? Our 60-day happy-skin guarantee covers your first purchase of any formula.</p>
+              </div>
+            </details>
+          </div>
+        </div>
+      </div>
+
+      {%- if collection != empty or product.collections.size > 0 -%}
+        {%- assign cross = product.collections.first | default: collections.all -%}
+        {%- if cross.products.size > 1 -%}
+          <div class="pdp-cross">
+            <div class="section-head" data-reveal>
+              <div>
+                <p class="eyebrow">Pairs well with</p>
+                <h2 class="section-title">Complete the ritual.</h2>
+              </div>
+            </div>
+            <div class="product-grid product-grid--4">
+              {%- assign shown = 0 -%}
+              {%- for p in cross.products -%}
+                {%- if p.id != product.id and shown < 4 -%}
+                  {%- render 'product-card', product: p -%}
+                  {%- assign shown = shown | plus: 1 -%}
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+          </div>
+        {%- endif -%}
+      {%- endif -%}
+    </div>
+  </section>
+
+{%- when 'cart' -%}
+  <section class="cart-page">
+    <div class="container">
+      <h1 class="page-title" data-reveal>Your bag</h1>
+      {%- if cart.item_count > 0 -%}
+        {%- form 'cart', class: 'cart-form' -%}
+          <div class="cart-layout">
+            <div class="cart-items">
+              {%- for line in cart.items -%}
+                <div class="cart-row" data-reveal>
+                  <a class="cart-row-media" href="{{ line.url }}">
+                    {%- if line.image -%}<img src="{{ line.image | image_url: width: 240 }}" alt="{{ line.title | escape }}" width="240" height="300">{%- endif -%}
+                  </a>
+                  <div class="cart-row-info">
+                    <a class="cart-row-title" href="{{ line.url }}">{{ line.product.title }}</a>
+                    {%- unless line.variant.title == 'Default Title' -%}<p class="cart-row-variant">{{ line.variant.title }}</p>{%- endunless -%}
+                    <p class="cart-row-price">{{ line.final_price | money }}</p>
+                    <div class="qty qty--sm">
+                      <button type="button" class="qty-btn" data-step="-1" data-for-line="{{ line.key }}" aria-label="Decrease quantity">−</button>
+                      <input type="number" name="updates[]" value="{{ line.quantity }}" min="0" max="9" data-line-input data-line-key="{{ line.key }}" aria-label="Quantity for {{ line.product.title | escape }}">
+                      <button type="button" class="qty-btn" data-step="1" data-for-line="{{ line.key }}" aria-label="Increase quantity">+</button>
+                    </div>
+                  </div>
+                  <div class="cart-row-total">
+                    <strong>{{ line.final_line_price | money }}</strong>
+                    <a class="cart-row-remove" href="{{ routes.cart_change_url }}?line={{ forloop.index }}&quantity=0" aria-label="Remove {{ line.product.title | escape }}">Remove</a>
+                  </div>
+                </div>
+              {%- endfor -%}
+            </div>
+            <aside class="cart-summary" data-reveal>
+              <h2 class="cart-summary-title">Summary</h2>
+              <div class="meter">
+                <p class="meter-label" data-meter-label></p>
+                <div class="meter-track"><div class="meter-fill" data-meter-fill></div></div>
+              </div>
+              <div class="summary-line"><span>Subtotal</span><strong>{{ cart.total_price | money }}</strong></div>
+              <p class="summary-note">Shipping and taxes calculated at checkout.</p>
+              <label class="visually-hidden" for="cart-note">Order notes</label>
+              <textarea id="cart-note" class="cart-note" name="note" placeholder="Order notes (optional)">{{ cart.note }}</textarea>
+              <button class="btn btn-dark btn-block" type="submit" name="checkout">Checkout — {{ cart.total_price | money }}</button>
+              <button class="btn btn-ghost btn-block" type="submit" name="update">Update bag</button>
+            </aside>
+          </div>
+        {%- endform -%}
+      {%- else -%}
+        <div class="empty-state">
+          <span class="empty-icon" aria-hidden="true">✦</span>
+          <h2>Your bag is empty</h2>
+          <p>Good skin is one ritual away.</p>
+          <a class="btn btn-dark" href="{{ routes.all_products_collection_url }}">Start shopping</a>
+        </div>
+      {%- endif -%}
+    </div>
+  </section>
+
+{%- when 'page' -%}
+  <section class="content-page">
+    <div class="container container--narrow">
+      <p class="eyebrow" data-reveal>{{ shop.name }}</p>
+      <h1 class="page-title" data-reveal>{{ page.title }}</h1>
+      <div class="rte page-body" data-reveal>{{ page.content }}</div>
+    </div>
+  </section>
+
+{%- when 'blog' -%}
+  <section class="blog-page">
+    <div class="container">
+      <p class="eyebrow" data-reveal>Skin school</p>
+      <h1 class="page-title" data-reveal>{{ blog.title }}</h1>
+      <div class="blog-grid">
+        {%- paginate blog.articles by 9 -%}
+          {%- for article in blog.articles -%}
+            <article class="school-card" data-reveal style="transition-delay: {{ forloop.index0 | modulo: 3 | times: 90 }}ms;">
+              <a class="school-media kb-hover" href="{{ article.url }}">
+                {%- if article.image -%}
+                  <img src="{{ article.image | image_url: width: 800 }}" alt="{{ article.title | escape }}" loading="lazy" width="800" height="600">
+                {%- else -%}
+                  <span class="tile-fallback" aria-hidden="true">✦</span>
+                {%- endif -%}
+                {%- if article.tags.size > 0 -%}<span class="school-tag">{{ article.tags.first }}</span>{%- endif -%}
+              </a>
+              <div class="school-body">
+                <h3><a href="{{ article.url }}">{{ article.title }}</a></h3>
+                <p>{{ article.excerpt_or_content | strip_html | truncate: 130 }}</p>
+                <a class="link-line school-link" href="{{ article.url }}">Read — {{ article.published_at | date: '%b %d' }}</a>
+              </div>
+            </article>
+          {%- endfor -%}
+          {%- if paginate.pages > 1 -%}
+            <nav class="pagination" aria-label="Pagination">{{ paginate | default_pagination }}</nav>
+          {%- endif -%}
+        {%- endpaginate -%}
+      </div>
+    </div>
+  </section>
+
+{%- when 'article' -%}
+  <section class="article-page">
+    <div class="container container--narrow">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ routes.root_url }}">Home</a> <span>/</span>
+        <a href="{{ blog.url }}">{{ blog.title }}</a> <span>/</span>
+        <span aria-current="page">{{ article.title | truncate: 32 }}</span>
+      </nav>
+      {%- if article.tags.size > 0 -%}<p class="eyebrow" data-reveal>{{ article.tags | join: ' · ' }}</p>{%- endif -%}
+      <h1 class="page-title" data-reveal>{{ article.title }}</h1>
+      <p class="article-meta" data-reveal>{{ article.author }} · {{ article.published_at | date: '%B %d, %Y' }}</p>
+      {%- if article.image -%}
+        <div class="article-hero kb" data-reveal>
+          <img src="{{ article.image | image_url: width: 1600 }}" alt="{{ article.image.alt | default: article.title | escape }}" width="1600" height="900">
+        </div>
+      {%- endif -%}
+      <div class="rte page-body" data-reveal>{{ article.content }}</div>
+      <a class="btn btn-ghost article-back" href="{{ blog.url }}">← All articles</a>
+    </div>
+  </section>
+
+{%- when 'list-collections' -%}
+  <section class="collections-page">
+    <div class="container">
+      <p class="eyebrow" data-reveal>The library</p>
+      <h1 class="page-title" data-reveal>Shop by collection</h1>
+      <div class="product-grid product-grid--3">
+        {%- for c in collections -%}
+          {%- unless c.handle == 'frontpage' or c.handle == 'all' -%}
+            <a class="tile tile--collection" href="{{ c.url }}" data-reveal style="transition-delay: {{ forloop.index0 | times: 80 }}ms;">
+              <div class="tile-media kb-hover">
+                {%- if c.image -%}
+                  <img src="{{ c.image | image_url: width: 800 }}" alt="{{ c.title | escape }}" loading="lazy" width="800" height="1000">
+                {%- elsif c.products.first.featured_image -%}
+                  <img src="{{ c.products.first.featured_image | image_url: width: 800 }}" alt="{{ c.title | escape }}" loading="lazy" width="800" height="1000">
+                {%- else -%}
+                  <span class="tile-fallback" aria-hidden="true">✦</span>
+                {%- endif -%}
+              </div>
+              <div class="tile-body">
+                <h3>{{ c.title }}</h3>
+                <p>{{ c.products_count }} formulas</p>
+                <span class="tile-cta">Explore →</span>
+              </div>
+            </a>
+          {%- endunless -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </section>
+
+{%- when '404' -%}
+  <section class="notfound">
+    <div class="container container--narrow">
+      <p class="notfound-code" aria-hidden="true" data-reveal>404</p>
+      <h1 class="page-title" data-reveal>This page evaporated.</h1>
+      <p class="page-sub" data-reveal>Like transepidermal water loss, it's gone. Let's get you back to something hydrating.</p>
+      <div class="notfound-actions" data-reveal>
+        <a class="btn btn-dark" href="{{ routes.root_url }}">Back home</a>
+        <a class="btn btn-ghost" href="{{ routes.all_products_collection_url }}">Shop the collection</a>
+      </div>
+    </div>
+  </section>
+
+{%- endcase -%}
+
+{% schema %}
+{
+  "name": "Page content",
+  "settings": []
+}
+{% endschema %}

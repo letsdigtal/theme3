@@ -1,0 +1,581 @@
+{%- comment -%}
+  CALMA homepage — every visual block is a theme-editor block.
+  Image settings fall back to the design's studio photography until replaced.
+{%- endcomment -%}
+
+{%- for block in section.blocks -%}
+  {%- case block.type -%}
+
+  {%- when 'hero' -%}
+    <section class="hero" {{ block.shopify_attributes }}>
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          {%- if block.settings.eyebrow != blank -%}
+            <p class="eyebrow" data-reveal>{{ block.settings.eyebrow }}</p>
+          {%- endif -%}
+          <h1 class="hero-title">
+            {%- assign lines = block.settings.heading | newline_to_br | split: '<br />' -%}
+            {%- for line in lines -%}
+              <span class="hero-line"><span style="--d: {{ forloop.index0 | times: 140 }}ms;">{{ line }}</span></span>
+            {%- endfor -%}
+          </h1>
+          {%- if block.settings.subheading != blank -%}
+            <p class="hero-sub" data-reveal style="transition-delay: 420ms;">{{ block.settings.subheading }}</p>
+          {%- endif -%}
+          <div class="hero-actions" data-reveal style="transition-delay: 540ms;">
+            {%- if block.settings.cta_label != blank -%}
+              <a class="btn btn-dark" href="{{ block.settings.cta_link }}">{{ block.settings.cta_label }}</a>
+            {%- endif -%}
+            {%- if block.settings.cta2_label != blank -%}
+              <a class="btn btn-ghost" href="{{ block.settings.cta2_link }}">{{ block.settings.cta2_label }}</a>
+            {%- endif -%}
+          </div>
+          {%- if block.settings.stat1_label != blank -%}
+            <div class="hero-stats" data-reveal style="transition-delay: 660ms;">
+              <div class="stat"><strong>{{ block.settings.stat1_value }}</strong><span>{{ block.settings.stat1_label }}</span></div>
+              <div class="stat"><strong>{{ block.settings.stat2_value }}</strong><span>{{ block.settings.stat2_label }}</span></div>
+              <div class="stat"><strong>{{ block.settings.stat3_value }}</strong><span>{{ block.settings.stat3_label }}</span></div>
+            </div>
+          {%- endif -%}
+        </div>
+
+        <div class="hero-media" data-reveal style="transition-delay: 200ms;">
+          <div class="hero-arch kb">
+            {%- if block.settings.image -%}
+              <img src="{{ block.settings.image | image_url: width: 1000 }}" alt="{{ block.settings.image.alt | default: block.settings.heading | strip_html | escape }}" width="1000" height="1250">
+            {%- else -%}
+              <img src="https://image.qwenlm.ai/generated-images/5d7d536d-27b2-496b-86b1-79529fb354f8/_result.png" alt="Model with calm, hydrated skin" width="1000" height="1250">
+            {%- endif -%}
+          </div>
+          {%- assign chip = all_products[block.settings.chip_product] -%}
+          {%- if chip != empty and chip != blank -%}
+            <a class="hero-chip" href="{{ chip.url }}">
+              {%- if chip.featured_image -%}
+                <img src="{{ chip.featured_image | image_url: width: 160 }}" alt="">
+              {%- endif -%}
+              <span class="hero-chip-text">
+                <strong>{{ chip.title }}</strong>
+                <em>{{ chip.price | money }}</em>
+              </span>
+              <span class="hero-chip-arrow" aria-hidden="true">→</span>
+            </a>
+          {%- endif -%}
+          {%- if block.settings.badge_text != blank -%}
+            <div class="hero-badge" aria-hidden="true">
+              <svg viewBox="0 0 100 100" class="hero-badge-svg">
+                <defs><path id="badge-circle" d="M50,50 m-37,0 a37,37 0 1,1 74,0 a37,37 0 1,1 -74,0"/></defs>
+                <text><textPath href="#badge-circle">{{ block.settings.badge_text }} ·</textPath></text>
+              </svg>
+              <span class="hero-badge-core">✳</span>
+            </div>
+          {%- endif -%}
+        </div>
+      </div>
+
+      {%- if block.settings.press_text != blank -%}
+        <div class="press-strip">
+          <div class="container press-inner">
+            <span class="press-label">As seen in</span>
+            {%- assign pubs = block.settings.press_text | split: ',' -%}
+            {%- for pub in pubs -%}<span class="press-name">{{ pub | strip }}</span>{%- endfor -%}
+          </div>
+        </div>
+      {%- endif -%}
+    </section>
+
+  {%- when 'marquee' -%}
+    <section class="band" {{ block.shopify_attributes }}>
+      <div class="mq-track" style="--mq-duration: {{ block.settings.speed }}s;">
+        {%- for i in (1..2) -%}
+          <span class="mq-set">
+            {%- for n in (1..3) -%}
+              {{ block.settings.text }}<span class="mq-sep" aria-hidden="true">✦</span>
+            {%- endfor -%}
+          </span>
+        {%- endfor -%}
+      </div>
+    </section>
+
+  {%- when 'tiles' -%}
+    {%- if block.type == 'tiles' and forloop.index0 >= 0 -%}{%- endif -%}
+  {%- endcase -%}
+{%- endfor -%}
+
+{%- comment -%} Mosaic tiles are collected across blocks and rendered as one grid {%- endcomment -%}
+{%- assign tile_blocks = section.blocks | where: 'type', 'tile' -%}
+{%- if tile_blocks.size > 0 -%}
+  <section class="mosaic-section">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <div>
+          <p class="eyebrow">Shop by concern</p>
+          <h2 class="section-title">Skin that <em>needs</em> a little extra calm.</h2>
+        </div>
+        <a class="link-line section-link" href="{{ routes.all_products_collection_url }}">View all products →</a>
+      </div>
+      <div class="mosaic">
+        {%- for block in tile_blocks -%}
+          <a class="tile tile--{{ forloop.index | modulo: 5 | plus: 1 }}" href="{{ block.settings.link }}" {{ block.shopify_attributes }} data-reveal style="transition-delay: {{ forloop.index0 | times: 80 }}ms;">
+            <div class="tile-media kb-hover">
+              {%- if block.settings.image -%}
+                <img src="{{ block.settings.image | image_url: width: 800 }}" alt="{{ block.settings.title | escape }}" loading="lazy" width="800" height="1000">
+              {%- else -%}
+                <span class="tile-fallback" aria-hidden="true">✦</span>
+              {%- endif -%}
+            </div>
+            <div class="tile-body">
+              <h3>{{ block.settings.title }}</h3>
+              <p>{{ block.settings.subtitle }}</p>
+              <span class="tile-cta">Shop now →</span>
+            </div>
+          </a>
+        {%- endfor -%}
+        <a class="tile tile--cta" href="{{ routes.all_products_collection_url }}" data-reveal>
+          <div class="tile-body tile-body--cta">
+            <h3>Not sure where to start?</h3>
+            <p>Take the 60-second skin quiz and build your ritual.</p>
+            <span class="btn btn-accent">Build my ritual</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+{%- endif -%}
+
+{%- for block in section.blocks -%}
+  {%- case block.type -%}
+
+  {%- when 'featured' -%}
+    <section class="featured" {{ block.shopify_attributes }}>
+      <div class="container">
+        <div class="section-head" data-reveal>
+          <div>
+            <p class="eyebrow">{{ block.settings.eyebrow }}</p>
+            <h2 class="section-title">{{ block.settings.heading }}</h2>
+          </div>
+          <a class="link-line section-link" href="{{ block.settings.view_all_link | default: routes.all_products_collection_url }}">{{ block.settings.view_all_label }} →</a>
+        </div>
+        {%- assign feat = collections[block.settings.collection] -%}
+        {%- if feat != empty and feat.products_count > 0 -%}
+          <div class="product-grid product-grid--4">
+            {%- for product in feat.products limit: block.settings.limit -%}
+              {%- render 'product-card', product: product -%}
+            {%- endfor -%}
+          </div>
+        {%- else -%}
+          <div class="onboard-hint">
+            <p><strong>Almost there.</strong> Create a collection (for example “Bestsellers”), add products to it in your Shopify admin, then pick it for this section in the theme editor.</p>
+          </div>
+        {%- endif -%}
+      </div>
+    </section>
+
+  {%- when 'proof' -%}
+    <section class="proof" {{ block.shopify_attributes }}>
+      <div class="container proof-grid">
+        <div class="proof-copy">
+          <p class="eyebrow" data-reveal>{{ block.settings.eyebrow }}</p>
+          <h2 class="section-title" data-reveal>{{ block.settings.heading }}</h2>
+          <p class="proof-body" data-reveal>{{ block.settings.body }}</p>
+          {%- if block.settings.claims != blank -%}
+            <ul class="claims">
+              {%- assign claims = block.settings.claims | newline_to_br | split: '<br />' -%}
+              {%- for claim in claims -%}
+                <li data-reveal style="transition-delay: {{ forloop.index0 | times: 90 }}ms;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>
+                  {{ claim }}
+                </li>
+              {%- endfor -%}
+            </ul>
+          {%- endif -%}
+          {%- if block.settings.stat1_label != blank -%}
+            <div class="stat-row">
+              <div class="stat-block" data-reveal><strong data-count data-target="{{ block.settings.stat1_value | remove: '%' }}"></strong><span>{{ block.settings.stat1_label }}</span></div>
+              <div class="stat-block" data-reveal style="transition-delay: 120ms;"><strong data-count data-target="{{ block.settings.stat2_value | remove: '%' }}"></strong><span>{{ block.settings.stat2_label }}</span></div>
+              <div class="stat-block" data-reveal style="transition-delay: 240ms;"><strong data-count data-target="{{ block.settings.stat3_value | remove: '%' }}"></strong><span>{{ block.settings.stat3_label }}</span></div>
+            </div>
+          {%- endif -%}
+        </div>
+        <div class="proof-visual" data-reveal>
+          <div class="ba" style="--pos: 50%;">
+            {%- assign after_src = block.settings.after_image | image_url: width: 1200 -%}
+            {%- unless block.settings.after_image -%}{%- assign after_src = 'https://image.qwenlm.ai/generated-images/6473e149-23ff-4e6d-a243-3b6ad8a48abd/_result.png' -%}{%- endunless -%}
+            {%- assign before_src = block.settings.before_image | image_url: width: 1200 -%}
+            {%- unless block.settings.before_image -%}{%- assign before_src = 'https://image.qwenlm.ai/generated-images/51eba972-ef53-480b-9095-ff9cde81e8cb/_result.png' -%}{%- endunless -%}
+            <img class="ba-after" src="{{ after_src }}" alt="After four weeks — calm, hydrated skin" width="1200" height="900">
+            <div class="ba-clip"><img src="{{ before_src }}" alt="Before — dry, irritated skin" width="1200" height="900"></div>
+            <span class="ba-tag ba-tag--before">Before</span>
+            <span class="ba-tag ba-tag--after">After · week 4</span>
+            <div class="ba-handle" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l-6 6 6 6M15 6l6 6-6 6"/></svg>
+            </div>
+            <label class="visually-hidden" for="ba-range">Drag to compare before and after</label>
+            <input class="ba-range" id="ba-range" type="range" min="0" max="100" value="50" data-ba>
+          </div>
+          <p class="proof-caption">{{ block.settings.caption }}</p>
+        </div>
+      </div>
+    </section>
+
+  {%- when 'standards' -%}
+    <section class="standards" {{ block.shopify_attributes }}>
+      <div class="container standards-grid">
+        <div class="standards-copy">
+          <p class="eyebrow" data-reveal>{{ block.settings.eyebrow }}</p>
+          <h2 class="section-title" data-reveal>{{ block.settings.heading }}</h2>
+          <p class="standards-body" data-reveal>{{ block.settings.body }}</p>
+        </div>
+        <div class="split-list">
+          <div class="list-card list-card--in" data-reveal>
+            <h3>Always in</h3>
+            <ul>
+              {%- assign ins = block.settings.always_in | newline_to_br | split: '<br />' -%}
+              {%- for item in ins -%}<li><span aria-hidden="true">＋</span>{{ item }}</li>{%- endfor -%}
+            </ul>
+          </div>
+          <div class="list-card list-card--out" data-reveal style="transition-delay: 130ms;">
+            <h3>Never in</h3>
+            <ul>
+              {%- assign outs = block.settings.never_in | newline_to_br | split: '<br />' -%}
+              {%- for item in outs -%}<li><span aria-hidden="true">－</span>{{ item }}</li>{%- endfor -%}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  {%- when 'ritual' -%}
+    {%- assign r1 = all_products[block.settings.product_1] -%}
+    {%- assign r2 = all_products[block.settings.product_2] -%}
+    {%- assign r3 = all_products[block.settings.product_3] -%}
+    <section class="ritual" {{ block.shopify_attributes }}>
+      <div class="container ritual-grid">
+        <div class="ritual-sticky">
+          <p class="eyebrow" data-reveal>{{ block.settings.eyebrow }}</p>
+          <h2 class="section-title" data-reveal>{{ block.settings.heading }}</h2>
+          <p class="ritual-body" data-reveal>{{ block.settings.body }}</p>
+          <div class="ritual-card" data-reveal>
+            <div class="ritual-card-thumbs">
+              {%- for rp in [r1, r2, r3] -%}
+                {%- if rp != empty and rp != blank and rp.featured_image -%}
+                  <img src="{{ rp.featured_image | image_url: width: 160 }}" alt="{{ rp.title | escape }}">
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+            <div class="ritual-card-info">
+              <strong>{{ block.settings.bundle_name }}</strong>
+              <span>{{ block.settings.bundle_note }}</span>
+            </div>
+            {%- assign add_ids = '' -%}
+            {%- for rp in [r1, r2, r3] -%}
+              {%- if rp != empty and rp != blank -%}
+                {%- capture add_ids -%}{{ add_ids }}{{ rp.selected_or_first_available_variant.id }},{%- endcapture -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- if add_ids != '' -%}
+              <button class="btn btn-accent btn-block" data-add-all="{{ add_ids | remove_last: ',' }}">
+                {{ block.settings.bundle_button }}
+              </button>
+            {%- else -%}
+              <p class="onboard-small">Pick the three ritual products in the theme editor to enable one-click add.</p>
+            {%- endif -%}
+          </div>
+        </div>
+        <div class="ritual-steps">
+          {%- assign step_n = 0 -%}
+          {%- for rp in [r1, r2, r3] -%}
+            {%- if rp != empty and rp != blank -%}
+              {%- assign step_n = step_n | plus: 1 -%}
+              <article class="ritual-step" data-reveal style="transition-delay: {{ step_n | times: 110 }}ms;">
+                <a class="ritual-step-media kb-hover" href="{{ rp.url }}">
+                  {%- if rp.featured_image -%}
+                    <img src="{{ rp.featured_image | image_url: width: 480 }}" alt="{{ rp.title | escape }}" loading="lazy" width="480" height="600">
+                  {%- endif -%}
+                  <span class="ritual-step-num" aria-hidden="true">0{{ step_n }}</span>
+                </a>
+                <div class="ritual-step-body">
+                  <p class="ritual-step-label">{{ block.settings['step_label_' | append: step_n] | default: 'Step' }} · {{ rp.type | default: 'Formula' }}</p>
+                  <h3><a href="{{ rp.url }}">{{ rp.title }}</a></h3>
+                  <p>{{ rp.description | strip_html | truncate: 110 }}</p>
+                  <div class="ritual-step-foot">
+                    <span class="pcard-price">{{ rp.price | money }}</span>
+                    {%- form 'product', rp, class: 'card-form', data-cart-add: 'true' -%}
+                      <input type="hidden" name="id" value="{{ rp.selected_or_first_available_variant.id }}">
+                      <input type="hidden" name="quantity" value="1">
+                      <button type="submit" class="btn btn-dark btn-sm">Add — {{ rp.price | money }}</button>
+                    {%- endform -%}
+                  </div>
+                </div>
+              </article>
+            {%- endif -%}
+          {%- endfor -%}
+          {%- if step_n == 0 -%}
+            <div class="onboard-hint"><p><strong>Build the ritual.</strong> In the theme editor, pick three products for this section — they'll render here as steps 01–03 with one-click add.</p></div>
+          {%- endif -%}
+        </div>
+      </div>
+    </section>
+
+  {%- when 'quotes' -%}
+    {%- assign quote_blocks = section.blocks | where: 'type', 'quote' -%}
+    {%- if block.id == quote_blocks.first.id -%}
+      <section class="quotes">
+        <div class="container">
+          <div class="section-head" data-reveal>
+            <div>
+              <p class="eyebrow">{{ block.settings.eyebrow }}</p>
+              <h2 class="section-title">{{ block.settings.heading }}</h2>
+            </div>
+            <p class="quotes-rating">
+              <span class="stars" aria-hidden="true">★★★★★</span>
+              <strong>{{ block.settings.rating }}</strong> from {{ block.settings.rating_count }} verified reviews
+            </p>
+          </div>
+        </div>
+        <div class="quote-row" data-reveal>
+          {%- for qb in quote_blocks -%}
+            <figure class="quote-card">
+              <span class="stars" aria-hidden="true">★★★★★</span>
+              <blockquote>“{{ qb.settings.text }}”</blockquote>
+              <figcaption><strong>{{ qb.settings.author }}</strong><span>{{ qb.settings.meta }}</span></figcaption>
+            </figure>
+          {%- endfor -%}
+        </div>
+      </section>
+    {%- endif -%}
+
+  {%- when 'school' -%}
+    {%- assign school_blocks = section.blocks | where: 'type', 'school' -%}
+    {%- if block.id == school_blocks.first.id -%}
+      <section class="school">
+        <div class="container">
+          <div class="section-head" data-reveal>
+            <div>
+              <p class="eyebrow">Skin school</p>
+              <h2 class="section-title">Calm is a <em>skill.</em> We teach it.</h2>
+            </div>
+            <a class="link-line section-link" href="{{ blogs.news.url | default: routes.root_url }}">All articles →</a>
+          </div>
+          <div class="school-grid">
+            {%- for sb in school_blocks -%}
+              <article class="school-card" data-reveal style="transition-delay: {{ forloop.index0 | times: 100 }}ms;">
+                <a class="school-media kb-hover" href="{{ sb.settings.link | default: blogs.news.url | default: routes.root_url }}">
+                  {%- if sb.settings.image -%}
+                    <img src="{{ sb.settings.image | image_url: width: 800 }}" alt="{{ sb.settings.title | escape }}" loading="lazy" width="800" height="600">
+                  {%- else -%}
+                    <span class="tile-fallback" aria-hidden="true">✦</span>
+                  {%- endif -%}
+                  <span class="school-tag">{{ sb.settings.tag }}</span>
+                </a>
+                <div class="school-body">
+                  <h3><a href="{{ sb.settings.link | default: blogs.news.url | default: routes.root_url }}">{{ sb.settings.title }}</a></h3>
+                  <p>{{ sb.settings.excerpt }}</p>
+                  <a class="link-line school-link" href="{{ sb.settings.link | default: blogs.news.url | default: routes.root_url }}">Read — {{ sb.settings.read_time }} min</a>
+                </div>
+              </article>
+            {%- endfor -%}
+          </div>
+        </div>
+      </section>
+    {%- endif -%}
+
+  {%- when 'newsletter' -%}
+    <section class="newsletter" {{ block.shopify_attributes }}>
+      <div class="container newsletter-grid">
+        <div data-reveal>
+          <p class="eyebrow eyebrow--light">The Sunday calm-down</p>
+          <h2 class="section-title section-title--light">{{ block.settings.heading }}</h2>
+          <p class="newsletter-body">{{ block.settings.body }}</p>
+        </div>
+        <div data-reveal style="transition-delay: 140ms;">
+          {%- form 'customer', id: 'home-newsletter', class: 'news-form news-form--big' -%}
+            <input type="hidden" name="contact[tags]" value="newsletter">
+            <label class="visually-hidden" for="home-news-email">Email</label>
+            <input id="home-news-email" class="news-input" type="email" name="contact[email]" placeholder="{{ block.settings.placeholder }}" required autocomplete="email">
+            <button class="btn btn-accent" type="submit">{{ block.settings.button_label }}</button>
+            {%- if form.posted_successfully? -%}
+              <p class="news-ok news-ok--big">You're in — first note arrives Sunday. ✓</p>
+            {%- elsif form.errors -%}
+              <p class="news-err">Please enter a valid email address.</p>
+            {%- endif -%}
+          {%- endform -%}
+          <p class="newsletter-fine">{{ block.settings.fine_print }}</p>
+        </div>
+      </div>
+    </section>
+
+  {%- endcase -%}
+{%- endfor -%}
+
+{% schema %}
+{
+  "name": "Homepage",
+  "max_blocks": 30,
+  "blocks": [
+    {
+      "type": "hero",
+      "name": "Hero",
+      "limit": 1,
+      "settings": [
+        { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Dermatologist formulated · Since 2019" },
+        { "type": "textarea", "id": "heading", "label": "Heading (one line per row)", "default": "Calm skin\nisn't a trend.\nIt's biology." },
+        { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "Barrier-first skincare for dry, itchy and eczema-prone skin. Clinically proven to hydrate for 48 hours — without a drop of fragrance." },
+        { "type": "text", "id": "cta_label", "label": "Primary button label", "default": "Shop the collection" },
+        { "type": "url", "id": "cta_link", "label": "Primary button link" },
+        { "type": "text", "id": "cta2_label", "label": "Secondary button label", "default": "Our science" },
+        { "type": "url", "id": "cta2_link", "label": "Secondary button link" },
+        { "type": "image_picker", "id": "image", "label": "Hero image" },
+        { "type": "product", "id": "chip_product", "label": "Floating product chip" },
+        { "type": "text", "id": "badge_text", "label": "Rotating badge text", "default": "dermatologist formulated · fragrance free · " },
+        { "type": "text", "id": "stat1_value", "label": "Stat 1 value", "default": "48h" },
+        { "type": "text", "id": "stat1_label", "label": "Stat 1 label", "default": "clinically measured hydration" },
+        { "type": "text", "id": "stat2_value", "label": "Stat 2 value", "default": "93%" },
+        { "type": "text", "id": "stat2_label", "label": "Stat 2 label", "default": "felt less tightness in 7 days" },
+        { "type": "text", "id": "stat3_value", "label": "Stat 3 value", "default": "0" },
+        { "type": "text", "id": "stat3_label", "label": "Stat 3 label", "default": "drops of fragrance, ever" },
+        { "type": "text", "id": "press_text", "label": "Press names (comma separated)", "default": "ALLURE, SELF, BYRDIE, THE CUT, REAL SIMPLE" }
+      ]
+    },
+    {
+      "type": "marquee",
+      "name": "Marquee band",
+      "limit": 2,
+      "settings": [
+        { "type": "text", "id": "text", "label": "Marquee text", "default": "Oat Lipid Complex" },
+        { "type": "range", "id": "speed", "min": 14, "max": 60, "step": 2, "unit": "s", "label": "Loop speed", "default": 26 }
+      ]
+    },
+    {
+      "type": "tile",
+      "name": "Concern tile",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Image" },
+        { "type": "text", "id": "title", "label": "Title", "default": "Dryness" },
+        { "type": "text", "id": "subtitle", "label": "Subtitle", "default": "Thirsty, flaky, uncomfortable" },
+        { "type": "url", "id": "link", "label": "Link" }
+      ]
+    },
+    {
+      "type": "featured",
+      "name": "Featured collection",
+      "limit": 2,
+      "settings": [
+        { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "The bestsellers" },
+        { "type": "text", "id": "heading", "label": "Heading", "default": "Loved by skin, backed by science." },
+        { "type": "collection", "id": "collection", "label": "Collection" },
+        { "type": "range", "id": "limit", "min": 2, "max": 8, "step": 1, "label": "Products to show", "default": 4 },
+        { "type": "text", "id": "view_all_label", "label": "View all label", "default": "Shop all" },
+        { "type": "url", "id": "view_all_link", "label": "View all link" }
+      ]
+    },
+    {
+      "type": "proof",
+      "name": "Clinical proof",
+      "limit": 1,
+      "settings": [
+        { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Clinically proven" },
+        { "type": "text", "id": "heading", "label": "Heading", "default": "The numbers behind the calm." },
+        { "type": "textarea", "id": "body", "label": "Body", "default": "In an independent 4-week consumer study, our Oat Lipid Complex visibly reduced dryness and restored the moisture barrier — measured, not promised." },
+        { "type": "textarea", "id": "claims", "label": "Claims (one per line)", "default": "+48% skin hydration after one use\nRedness visibly reduced in 14 days\nSuitable for eczema-prone skin" },
+        { "type": "image_picker", "id": "before_image", "label": "Before image" },
+        { "type": "image_picker", "id": "after_image", "label": "After image" },
+        { "type": "text", "id": "caption", "label": "Caption", "default": "Independent 4-week consumer study, 112 participants. Results vary." },
+        { "type": "text", "id": "stat1_value", "label": "Stat 1 value", "default": "96" },
+        { "type": "text", "id": "stat1_label", "label": "Stat 1 label", "default": "% felt calmer skin by week 2" },
+        { "type": "text", "id": "stat2_value", "label": "Stat 2 value", "default": "89" },
+        { "type": "text", "id": "stat2_label", "label": "Stat 2 label", "default": "% repurchased after the first bottle" },
+        { "type": "text", "id": "stat3_value", "label": "Stat 3 value", "default": "4.9" },
+        { "type": "text", "id": "stat3_label", "label": "Stat 3 label", "default": "average rating across 2,140 reviews" }
+      ]
+    },
+    {
+      "type": "standards",
+      "name": "Formula standards",
+      "limit": 1,
+      "settings": [
+        { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "The CALMA standard" },
+        { "type": "text", "id": "heading", "label": "Heading", "default": "Every formula earns its place." },
+        { "type": "textarea", "id": "body", "label": "Body", "default": "If an ingredient doesn't hydrate, repair or protect, it doesn't go in the bottle. Every formula is reviewed by our dermatology panel before it reaches your shelf." },
+        { "type": "textarea", "id": "always_in", "label": "Always in (one per line)", "default": "Colloidal oat & ceramides\nGlycerin, squalane, panthenol\npH-balanced, tested formulas" },
+        { "type": "textarea", "id": "never_in", "label": "Never in (one per line)", "default": "Fragrance & essential oils\nDrying alcohols & sulfates\nParabens, dyes, fillers" }
+      ]
+    },
+    {
+      "type": "ritual",
+      "name": "Ritual steps",
+      "limit": 1,
+      "settings": [
+        { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "The ritual" },
+        { "type": "text", "id": "heading", "label": "Heading", "default": "Three steps. Ninety seconds. All day calm." },
+        { "type": "textarea", "id": "body", "label": "Body", "default": "A routine you'll actually keep: cleanse without stripping, rebuild the barrier, seal it in. Morning and night." },
+        { "type": "product", "id": "product_1", "label": "Step 1 product" },
+        { "type": "product", "id": "product_2", "label": "Step 2 product" },
+        { "type": "product", "id": "product_3", "label": "Step 3 product" },
+        { "type": "text", "id": "step_label_1", "label": "Step 1 label", "default": "Cleanse" },
+        { "type": "text", "id": "step_label_2", "label": "Step 2 label", "default": "Treat" },
+        { "type": "text", "id": "step_label_3", "label": "Step 3 label", "default": "Seal" },
+        { "type": "text", "id": "bundle_name", "label": "Bundle name", "default": "The Full Ritual" },
+        { "type": "text", "id": "bundle_note", "label": "Bundle note", "default": "All three steps · save 10%" },
+        { "type": "text", "id": "bundle_button", "label": "Bundle button", "default": "Add all three to bag" }
+      ]
+    },
+    {
+      "type": "quote",
+      "name": "Review quote",
+      "settings": [
+        { "type": "textarea", "id": "text", "label": "Quote", "default": "Two weeks in and the tight, itchy feeling is just… gone." },
+        { "type": "text", "id": "author", "label": "Author", "default": "Maya R." },
+        { "type": "text", "id": "meta", "label": "Meta", "default": "Verified buyer · Barrier Reset Serum" }
+      ]
+    },
+    {
+      "type": "school",
+      "name": "Skin school article",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Image" },
+        { "type": "text", "id": "tag", "label": "Tag", "default": "Science" },
+        { "type": "text", "id": "title", "label": "Title", "default": "Why your moisturizer stops working in winter" },
+        { "type": "textarea", "id": "excerpt", "label": "Excerpt", "default": "Cold air steals water faster than humectants can grab it. Here's the fix dermatologists actually recommend." },
+        { "type": "url", "id": "link", "label": "Article link" },
+        { "type": "text", "id": "read_time", "label": "Read time", "default": "6" }
+      ]
+    },
+    {
+      "type": "newsletter",
+      "name": "Newsletter",
+      "limit": 1,
+      "settings": [
+        { "type": "text", "id": "heading", "label": "Heading", "default": "Get 15% off your first ritual." },
+        { "type": "textarea", "id": "body", "label": "Body", "default": "Join the Sunday calm-down: one useful skincare note a week, plus your welcome code." },
+        { "type": "text", "id": "placeholder", "label": "Input placeholder", "default": "Your email address" },
+        { "type": "text", "id": "button_label", "label": "Button label", "default": "Join" },
+        { "type": "text", "id": "fine_print", "label": "Fine print", "default": "No spam. Unsubscribe anytime." }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Homepage",
+      "blocks": [
+        { "type": "hero" },
+        { "type": "marquee", "settings": { "text": "Oat Lipid Complex ✦ Ceramide NP ✦ Squalane ✦ Panthenol ✦ Colloidal Oat ✦ Niacinamide" } },
+        { "type": "tile", "settings": { "title": "Dryness", "subtitle": "Thirsty, flaky, uncomfortable" } },
+        { "type": "tile", "settings": { "title": "Redness", "subtitle": "Reactive, flushed, sensitive" } },
+        { "type": "tile", "settings": { "title": "Tightness", "subtitle": "That post-wash pull" } },
+        { "type": "tile", "settings": { "title": "Eczema-prone", "subtitle": "Itchy, stressed, compromised" } },
+        { "type": "featured" },
+        { "type": "proof" },
+        { "type": "standards" },
+        { "type": "ritual" },
+        { "type": "quote", "settings": { "text": "Two weeks in and the tight, itchy feeling is just… gone. I've repurchased twice.", "author": "Maya R.", "meta": "Verified buyer · Barrier Reset Serum" } },
+        { "type": "quote", "settings": { "text": "Finally a brand that understands eczema skin isn't just 'dry skin'.", "author": "Daniel K.", "meta": "Verified buyer · Rescue Balm" } },
+        { "type": "quote", "settings": { "text": "The only cleanser that doesn't leave my face squeaky. Squeaky was never the goal.", "author": "Priya S.", "meta": "Verified buyer · Oat Milk Cleanser" } },
+        { "type": "school", "settings": { "tag": "Science", "title": "Why your moisturizer stops working in winter", "read_time": "6" } },
+        { "type": "school", "settings": { "tag": "Rituals", "title": "The 3-step routine dermatologists actually follow", "read_time": "4" } },
+        { "type": "school", "settings": { "tag": "Ingredients", "title": "Colloidal oat: the 2,000-year-old hero", "read_time": "7" } },
+        { "type": "newsletter" }
+      ]
+    }
+  ]
+}
+{% endschema %}
